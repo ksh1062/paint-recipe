@@ -884,18 +884,20 @@ async function saveToGitHub() {
     
     // PRODUCTS 시작/끝 위치 찾아서 교체
     const startMarker = 'const PRODUCTS = {';
-    const endMarker = ';
-// ── 관리자 기능';
+    const endMarker = '// ── 관리자 기능 ──────────────────────────────────────';
     const startIdx = decodedContent.indexOf(startMarker);
     const endIdx = decodedContent.indexOf(endMarker);
     
     if(startIdx === -1 || endIdx === -1) {
-      throw new Error('PRODUCTS 위치를 찾을 수 없습니다. 관리자에게 문의하세요.');
+      throw new Error('PRODUCTS 위치를 찾을 수 없습니다.');
     }
+    
+    // ; 위치 찾기 (endMarker 바로 앞)
+    const semiIdx = decodedContent.lastIndexOf(';', endIdx);
     
     const newHtml = decodedContent.slice(0, startIdx) 
       + 'const PRODUCTS = ' + productJson 
-      + decodedContent.slice(endIdx);
+      + decodedContent.slice(semiIdx);
 
     const encoded = btoa(unescape(encodeURIComponent(newHtml)));
 
