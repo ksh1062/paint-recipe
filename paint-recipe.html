@@ -251,6 +251,7 @@ th:nth-child(12){width:30px}
       ⚙ 관리자 — 제품 데이터 관리
       <div style="display:flex;gap:8px;align-items:center">
         <button id="github-save-btn" onclick="saveToGitHub()" style="padding:4px 16px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">GitHub 저장</button>
+        <button onclick="localStorage.removeItem('gh_token');GITHUB_TOKEN='';alert('토큰이 초기화됐습니다.');" style="padding:4px 10px;background:none;border:1px solid #666;color:#aaa;border-radius:4px;cursor:pointer;font-size:11px">토큰 초기화</button>
         <button onclick="showTab('create')" style="background:none;border:1px solid #aaa;color:#aaa;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:12px">닫기</button>
       </div>
     </div>
@@ -852,11 +853,16 @@ function applyPriceChange() {
 
 // ── GitHub 자동 저장 ──────────────────────────────────
 async function saveToGitHub() {
+  // 저장된 토큰 불러오기
+  if(!GITHUB_TOKEN) {
+    GITHUB_TOKEN = localStorage.getItem('gh_token') || '';
+  }
   // 토큰이 없으면 입력 받기
   if(!GITHUB_TOKEN) {
-    const token = prompt('GitHub 토큰을 입력하세요:\n(한번 입력하면 이 세션 동안 유지됩니다)');
+    const token = prompt('GitHub 토큰을 입력하세요:\n(입력하면 이 브라우저에 저장됩니다)');
     if(!token) return;
     GITHUB_TOKEN = token.trim();
+    localStorage.setItem('gh_token', GITHUB_TOKEN);
   }
 
   const btn = document.getElementById('github-save-btn');
@@ -909,6 +915,7 @@ async function saveToGitHub() {
     btn.style.background = '#c62828';
     btn.disabled = false;
     GITHUB_TOKEN = ''; // 실패시 토큰 초기화
+    localStorage.removeItem('gh_token');
     alert('저장 실패: ' + e.message + '\n토큰을 다시 입력해주세요.');
   }
 }
