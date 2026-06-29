@@ -249,7 +249,10 @@ th:nth-child(12){width:30px}
   <div style="background:#fff;border-radius:8px;border:1px solid #e0e0e0;overflow:hidden">
     <div style="padding:14px 18px;background:#1e2a3a;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between">
       ⚙ 관리자 — 제품 데이터 관리
-      <button onclick="showTab('create')" style="background:none;border:1px solid #aaa;color:#aaa;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:12px">닫기</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="github-save-btn" onclick="saveToGitHub()" style="padding:4px 16px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600">GitHub 저장</button>
+        <button onclick="showTab('create')" style="background:none;border:1px solid #aaa;color:#aaa;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:12px">닫기</button>
+      </div>
     </div>
 
     <!-- 탭 -->
@@ -638,6 +641,10 @@ function loadRecipe(id) {
 
 // ── 관리자 기능 ──────────────────────────────────────
 const ADMIN_PW = '0055';
+const GITHUB_OWNER = 'ksh1062';
+const GITHUB_REPO = 'paint-recipe';
+const GITHUB_FILE = 'paint-recipe.html';
+let GITHUB_TOKEN = '';
 let adminUnlocked = false;
 
 function adminLogin() {
@@ -841,6 +848,69 @@ function applyPriceChange() {
       총 <strong>${totalCnt}개</strong> 제품 반영되었습니다.
     </div>`;
   setTimeout(()=>{ document.getElementById('price-preview').innerHTML=''; }, 4000);
+}
+
+// ── GitHub 자동 저장 ──────────────────────────────────
+async function saveToGitHub() {
+  // 토큰이 없으면 입력 받기
+  if(!GITHUB_TOKEN) {
+    const token = prompt('GitHub 토큰을 입력하세요:\n(한번 입력하면 이 세션 동안 유지됩니다)');
+    if(!token) return;
+    GITHUB_TOKEN = token.trim();
+  }
+
+  const btn = document.getElementById('github-save-btn');
+  btn.textContent = '저장 중...';
+  btn.disabled = true;
+
+  try {
+    // 현재 파일의 SHA 가져오기
+    const getRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    const fileData = await getRes.json();
+    const sha = fileData.sha;
+
+    // 현재 파일 내용에 최신 PRODUCTS 데이터 반영
+    const productJson = JSON.stringify(PRODUCTS, null, 0);
+    const decodedContent = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+    
+    // PRODUCTS 데이터 교체 (정규식)
+    const newHtml = decodedContent.replace(/const PRODUCTS = \{[\s\S]*?(?=;\s*\/\/ ── 관리자)/,
+      'const PRODUCTS = ' + productJson);
+
+    const encoded = btoa(unescape(encodeURIComponent(newHtml)));
+
+    // 파일 업데이트
+    const putRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: '관리자: 제품 데이터 업데이트',
+        content: encoded,
+        sha: sha
+      })
+    });
+
+    if(putRes.ok) {
+      btn.textContent = '✅ 저장완료!';
+      btn.style.background = '#2e7d32';
+      setTimeout(()=>{ btn.textContent = 'GitHub 저장'; btn.style.background = '#1565c0'; btn.disabled = false; }, 3000);
+    } else {
+      const err = await putRes.json();
+      throw new Error(err.message);
+    }
+  } catch(e) {
+    btn.textContent = '❌ 저장실패';
+    btn.style.background = '#c62828';
+    btn.disabled = false;
+    GITHUB_TOKEN = ''; // 실패시 토큰 초기화
+    alert('저장 실패: ' + e.message + '\n토큰을 다시 입력해주세요.');
+  }
 }
 
 document.getElementById('round-select').addEventListener('change', updateStats);
