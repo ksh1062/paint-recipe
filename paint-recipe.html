@@ -879,11 +879,23 @@ async function saveToGitHub() {
 
     // 현재 파일 내용에 최신 PRODUCTS 데이터 반영
     const productJson = JSON.stringify(PRODUCTS, null, 0);
-    const decodedContent = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ''))));
+    const rawContent = fileData.content.replace(/\n/g, '');
+    const decodedContent = decodeURIComponent(escape(atob(rawContent)));
     
-    // PRODUCTS 데이터 교체 (정규식)
-    const newHtml = decodedContent.replace(/const PRODUCTS = \{[\s\S]*?(?=;\s*\/\/ ── 관리자)/,
-      'const PRODUCTS = ' + productJson);
+    // PRODUCTS 시작/끝 위치 찾아서 교체
+    const startMarker = 'const PRODUCTS = {';
+    const endMarker = ';
+// ── 관리자 기능';
+    const startIdx = decodedContent.indexOf(startMarker);
+    const endIdx = decodedContent.indexOf(endMarker);
+    
+    if(startIdx === -1 || endIdx === -1) {
+      throw new Error('PRODUCTS 위치를 찾을 수 없습니다. 관리자에게 문의하세요.');
+    }
+    
+    const newHtml = decodedContent.slice(0, startIdx) 
+      + 'const PRODUCTS = ' + productJson 
+      + decodedContent.slice(endIdx);
 
     const encoded = btoa(unescape(encodeURIComponent(newHtml)));
 
