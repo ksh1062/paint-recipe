@@ -93,6 +93,7 @@ th:nth-child(12){width:30px}
 <div class="tabs">
   <div class="tab active" onclick="showTab('create')">레시피 생성</div>
   <div class="tab" onclick="showTab('list')">레시피 조회</div>
+  <div class="tab" onclick="adminLogin()" style="margin-left:auto;color:#f9a825">⚙ 관리자</div>
 </div>
 
 <div id="tab-create" class="container">
@@ -244,6 +245,101 @@ th:nth-child(12){width:30px}
   </div>
 </div>
 
+<div id="tab-admin" style="display:none;padding:16px">
+  <div style="background:#fff;border-radius:8px;border:1px solid #e0e0e0;overflow:hidden">
+    <div style="padding:14px 18px;background:#1e2a3a;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between">
+      ⚙ 관리자 — 제품 데이터 관리
+      <button onclick="showTab('create')" style="background:none;border:1px solid #aaa;color:#aaa;padding:3px 12px;border-radius:4px;cursor:pointer;font-size:12px">닫기</button>
+    </div>
+
+    <!-- 탭 -->
+    <div style="display:flex;border-bottom:2px solid #e0e0e0;background:#f8f9fa">
+      <div class="atab active" onclick="showAdminTab('brand')" style="padding:10px 20px;cursor:pointer;font-size:13px;font-weight:600;border-bottom:2px solid #1565c0;color:#1565c0;margin-bottom:-2px">브랜드 관리</div>
+      <div class="atab" onclick="showAdminTab('product')" style="padding:10px 20px;cursor:pointer;font-size:13px;color:#888">제품 추가/수정</div>
+      <div class="atab" onclick="showAdminTab('price')" style="padding:10px 20px;cursor:pointer;font-size:13px;color:#888">단가 일괄 조정</div>
+    </div>
+
+    <!-- 브랜드 관리 -->
+    <div id="admin-brand" style="padding:20px">
+      <div style="display:flex;gap:12px;margin-bottom:16px;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">새 브랜드명</div>
+          <input id="new-brand-name" type="text" placeholder="예: 글라슈리트2.0" style="padding:7px 12px;border:1px solid #ccc;border-radius:4px;font-size:13px;width:220px">
+        </div>
+        <button onclick="addBrand()" style="padding:7px 18px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">브랜드 추가</button>
+      </div>
+      <div id="brand-list-admin" style="border:1px solid #e0e0e0;border-radius:6px;overflow:hidden"></div>
+    </div>
+
+    <!-- 제품 추가/수정 -->
+    <div id="admin-product" style="display:none;padding:20px">
+      <div style="display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">브랜드 선택</div>
+          <select id="admin-brand-sel" onchange="loadAdminProducts()" style="padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;width:200px">
+            <option value="">브랜드 선택</option>
+          </select>
+        </div>
+        <button onclick="showAddProductForm()" style="padding:7px 16px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">+ 신규 제품 추가</button>
+      </div>
+
+      <!-- 신규 제품 폼 -->
+      <div id="add-product-form" style="display:none;background:#f0f4ff;border:1px solid #c5d8f8;border-radius:6px;padding:14px;margin-bottom:14px">
+        <div style="font-weight:600;font-size:13px;color:#1565c0;margin-bottom:10px">신규 제품 정보 입력</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <div><div style="font-size:11px;color:#666;margin-bottom:3px">제품코드*</div><input id="pf-name" placeholder="예: 90-A999" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:130px"></div>
+          <div><div style="font-size:11px;color:#666;margin-bottom:3px">용량(L)*</div><input id="pf-vol" type="number" placeholder="0.5" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:80px"></div>
+          <div><div style="font-size:11px;color:#666;margin-bottom:3px">구매원가(원)*</div><input id="pf-buy" type="number" placeholder="66410" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:110px"></div>
+          <div><div style="font-size:11px;color:#666;margin-bottom:3px">판매가(원)*</div><input id="pf-sell" type="number" placeholder="105840" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:110px"></div>
+          <div><div style="font-size:11px;color:#666;margin-bottom:3px">비중(kg/L)*</div><input id="pf-spec" type="number" placeholder="1.05" step="0.001" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:12px;width:90px"></div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button onclick="addProduct2()" style="padding:6px 18px;background:#1565c0;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">추가</button>
+          <button onclick="document.getElementById('add-product-form').style.display='none'" style="padding:6px 14px;background:#bbb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px">취소</button>
+        </div>
+      </div>
+
+      <div id="admin-product-list" style="border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;max-height:450px;overflow-y:auto"></div>
+    </div>
+
+    <!-- 단가 일괄 조정 -->
+    <div id="admin-price" style="display:none;padding:20px">
+      <div style="background:#fff8e1;border:1px solid #f9a825;border-radius:6px;padding:12px;margin-bottom:16px;font-size:12px;color:#555">
+        ⚠ 선택한 브랜드의 구매원가 또는 판매가를 일괄적으로 인상/인하합니다.
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">브랜드</div>
+          <select id="price-brand-sel" style="padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;width:200px">
+            <option value="">전체 브랜드</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">조정 대상</div>
+          <select id="price-target" style="padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px">
+            <option value="buy">구매원가만</option>
+            <option value="sell">판매가만</option>
+            <option value="both">구매원가+판매가 모두</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">조정 방식</div>
+          <select id="price-method" style="padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px">
+            <option value="pct">% 비율</option>
+            <option value="fixed">고정금액(원)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#888;margin-bottom:4px">값 (인상+, 인하-)</div>
+          <input id="price-val" type="number" placeholder="예: 10 또는 -5" style="padding:7px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;width:120px">
+        </div>
+        <button onclick="applyPriceChange()" style="padding:7px 20px;background:#e65100;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600">적용</button>
+      </div>
+      <div id="price-preview" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 제품 선택 모달 -->
 <div id="product-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;overflow:auto">
   <div style="background:#fff;width:600px;max-height:80vh;margin:60px auto;border-radius:8px;overflow:hidden;display:flex;flex-direction:column">
@@ -270,8 +366,15 @@ let savedRecipes = JSON.parse(localStorage.getItem('paintRecipes') || '[]');
 function showTab(tab) {
   document.getElementById('tab-create').style.display = tab==='create' ? 'flex' : 'none';
   document.getElementById('tab-list').style.display = tab==='list' ? 'block' : 'none';
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', (i===0&&tab==='create')||(i===1&&tab==='list')));
+  document.getElementById('tab-admin').style.display = tab==='admin' ? 'block' : 'none';
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.remove('active');
+    if(i===0&&tab==='create') t.classList.add('active');
+    if(i===1&&tab==='list') t.classList.add('active');
+    if(i===2&&tab==='admin') t.classList.add('active');
+  });
   if(tab==='list') renderRecipeList();
+  if(tab==='admin') initAdmin();
 }
 
 function onBrandChange() {
@@ -531,6 +634,213 @@ function loadRecipe(id) {
     if(el) el.value = row._qty;
   });
   updateStats();
+}
+
+// ── 관리자 기능 ──────────────────────────────────────
+const ADMIN_PW = '0055';
+let adminUnlocked = false;
+
+function adminLogin() {
+  if(adminUnlocked) { showTab('admin'); return; }
+  const pw = prompt('관리자 비밀번호를 입력하세요:');
+  if(pw === ADMIN_PW) {
+    adminUnlocked = true;
+    showTab('admin');
+  } else if(pw !== null) {
+    alert('비밀번호가 틀렸습니다.');
+  }
+}
+
+function showAdminTab(tab) {
+  ['brand','product','price'].forEach(t => {
+    document.getElementById('admin-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.atab').forEach((el,i) => {
+    const tabs = ['brand','product','price'];
+    const active = tabs[i] === tab;
+    el.style.borderBottom = active ? '2px solid #1565c0' : 'none';
+    el.style.color = active ? '#1565c0' : '#888';
+    el.style.fontWeight = active ? '600' : 'normal';
+    el.style.marginBottom = active ? '-2px' : '0';
+  });
+}
+
+function initAdmin() {
+  renderBrandList();
+  // 브랜드 셀렉트 채우기
+  const sel1 = document.getElementById('admin-brand-sel');
+  const sel2 = document.getElementById('price-brand-sel');
+  const brands = Object.keys(PRODUCTS);
+  sel1.innerHTML = '<option value="">브랜드 선택</option>' + brands.map(b=>`<option value="${b}">${b} (${PRODUCTS[b].length}개)</option>`).join('');
+  sel2.innerHTML = '<option value="">전체 브랜드</option>' + brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+}
+
+// ── 브랜드 관리 ──
+function renderBrandList() {
+  const div = document.getElementById('brand-list-admin');
+  const brands = Object.keys(PRODUCTS);
+  if(!brands.length) { div.innerHTML='<div style="padding:20px;text-align:center;color:#bbb">등록된 브랜드 없음</div>'; return; }
+  div.innerHTML = brands.map(b=>`
+    <div style="padding:10px 16px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <span style="font-weight:600;font-size:13px">${b}</span>
+        <span style="font-size:11px;color:#888;margin-left:8px">${PRODUCTS[b].length}개 제품</span>
+      </div>
+      <button onclick="deleteBrand('${b}')" style="padding:3px 12px;background:#fff;border:1px solid #e53935;color:#e53935;border-radius:3px;cursor:pointer;font-size:11px">삭제</button>
+    </div>`).join('');
+}
+
+function addBrand() {
+  const name = document.getElementById('new-brand-name').value.trim();
+  if(!name) { alert('브랜드명을 입력하세요.'); return; }
+  if(PRODUCTS[name]) { alert('이미 존재하는 브랜드입니다.'); return; }
+  PRODUCTS[name] = [];
+  document.getElementById('new-brand-name').value = '';
+  // 브랜드 선택 드롭다운도 업데이트
+  const sel = document.getElementById('brand-select');
+  sel.innerHTML = '<option value="">브랜드 선택</option>' + Object.keys(PRODUCTS).map(b=>`<option value="${b}">${b}</option>`).join('');
+  renderBrandList();
+  initAdmin();
+  alert(`"${name}" 브랜드가 추가되었습니다!`);
+}
+
+function deleteBrand(name) {
+  if(!confirm(`"${name}" 브랜드와 제품 ${PRODUCTS[name].length}개를 모두 삭제하시겠습니까?`)) return;
+  delete PRODUCTS[name];
+  const sel = document.getElementById('brand-select');
+  sel.innerHTML = '<option value="">브랜드 선택</option>' + Object.keys(PRODUCTS).map(b=>`<option value="${b}">${b}</option>`).join('');
+  renderBrandList();
+  initAdmin();
+}
+
+// ── 제품 관리 ──
+function loadAdminProducts() {
+  const brand = document.getElementById('admin-brand-sel').value;
+  const div = document.getElementById('admin-product-list');
+  if(!brand) { div.innerHTML=''; return; }
+  const prods = PRODUCTS[brand] || [];
+  if(!prods.length) { div.innerHTML='<div style="padding:20px;text-align:center;color:#bbb">등록된 제품 없음</div>'; return; }
+  div.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f5f7fa">
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:center">NO</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:left">제품코드</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:center">용량(L)</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:right">구매원가</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:right">판매가</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:center">g당구매가</th>
+        <th style="padding:8px;border-bottom:2px solid #e0e0e0;text-align:center">작업</th>
+      </tr></thead>
+      <tbody>
+        ${prods.map((p,i)=>`
+          <tr style="${i%2===0?'background:#f9f9f9':''}">
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:center">${p.no}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#1565c0;font-weight:600">${p.name}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:center">${p.volume}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right">${Math.round(p.buy_price).toLocaleString()}원</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:right;color:#e53935">${Math.round(p.sell_price).toLocaleString()}원</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:center">${p.g_buy.toFixed(2)}</td>
+            <td style="padding:7px 8px;border-bottom:1px solid #f0f0f0;text-align:center">
+              <button onclick="editProduct('${brand}',${i})" style="padding:2px 10px;background:#fff;border:1px solid #1565c0;color:#1565c0;border-radius:3px;cursor:pointer;font-size:11px;margin-right:4px">수정</button>
+              <button onclick="deleteProduct('${brand}',${i})" style="padding:2px 10px;background:#fff;border:1px solid #e53935;color:#e53935;border-radius:3px;cursor:pointer;font-size:11px">삭제</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function showAddProductForm() {
+  const brand = document.getElementById('admin-brand-sel').value;
+  if(!brand) { alert('브랜드를 먼저 선택하세요.'); return; }
+  ['pf-name','pf-vol','pf-buy','pf-sell','pf-spec'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('add-product-form').style.display='block';
+}
+
+function addProduct2() {
+  const brand = document.getElementById('admin-brand-sel').value;
+  const name = document.getElementById('pf-name').value.trim();
+  const vol  = parseFloat(document.getElementById('pf-vol').value);
+  const buy  = parseFloat(document.getElementById('pf-buy').value);
+  const sell = parseFloat(document.getElementById('pf-sell').value);
+  const spec = parseFloat(document.getElementById('pf-spec').value);
+  if(!name||!vol||!buy||!sell||!spec) { alert('모든 항목을 입력하세요.'); return; }
+  const spec_per_l = spec;
+  const g_buy  = round4(buy  / (spec_per_l * 1000));
+  const g_sell = round4(sell / (spec_per_l * 1000));
+  const prods = PRODUCTS[brand];
+  const no = prods.length ? Math.max(...prods.map(p=>p.no)) + 1 : 1;
+  prods.push({no, name, volume:vol, buy_price:Math.round(buy), sell_price:Math.round(sell),
+    spec_kg: spec_per_l * vol, spec_per_l, g_buy, g_sell});
+  document.getElementById('add-product-form').style.display='none';
+  loadAdminProducts();
+  alert(`"${name}" 제품이 추가되었습니다!`);
+}
+
+function round4(n) { return Math.round(n * 10000) / 10000; }
+
+function editProduct(brand, idx) {
+  const p = PRODUCTS[brand][idx];
+  const newBuy  = prompt(`[${p.name}] 구매원가 수정`, p.buy_price);
+  if(newBuy === null) return;
+  const newSell = prompt(`[${p.name}] 판매가 수정`, p.sell_price);
+  if(newSell === null) return;
+  const newVol  = prompt(`[${p.name}] 용량(L) 수정`, p.volume);
+  if(newVol === null) return;
+  PRODUCTS[brand][idx].buy_price  = Math.round(parseFloat(newBuy));
+  PRODUCTS[brand][idx].sell_price = Math.round(parseFloat(newSell));
+  PRODUCTS[brand][idx].volume     = parseFloat(newVol);
+  PRODUCTS[brand][idx].g_buy  = round4(parseFloat(newBuy)  / (p.spec_per_l * 1000));
+  PRODUCTS[brand][idx].g_sell = round4(parseFloat(newSell) / (p.spec_per_l * 1000));
+  loadAdminProducts();
+  alert('수정되었습니다!');
+}
+
+function deleteProduct(brand, idx) {
+  const p = PRODUCTS[brand][idx];
+  if(!confirm(`"${p.name}" 제품을 삭제하시겠습니까?`)) return;
+  PRODUCTS[brand].splice(idx, 1);
+  PRODUCTS[brand].forEach((p,i) => p.no = i+1);
+  loadAdminProducts();
+}
+
+// ── 단가 일괄 조정 ──
+function applyPriceChange() {
+  const brand   = document.getElementById('price-brand-sel').value;
+  const target  = document.getElementById('price-target').value;
+  const method  = document.getElementById('price-method').value;
+  const val     = parseFloat(document.getElementById('price-val').value);
+  if(isNaN(val)) { alert('조정값을 입력하세요.'); return; }
+
+  const brands = brand ? [brand] : Object.keys(PRODUCTS);
+  let totalCnt = 0;
+
+  brands.forEach(b => {
+    PRODUCTS[b].forEach(p => {
+      if(target === 'buy' || target === 'both') {
+        p.buy_price = method==='pct'
+          ? Math.round(p.buy_price * (1 + val/100))
+          : Math.round(p.buy_price + val);
+        p.g_buy = round4(p.buy_price / (p.spec_per_l * 1000));
+      }
+      if(target === 'sell' || target === 'both') {
+        p.sell_price = method==='pct'
+          ? Math.round(p.sell_price * (1 + val/100))
+          : Math.round(p.sell_price + val);
+        p.g_sell = round4(p.sell_price / (p.spec_per_l * 1000));
+      }
+      totalCnt++;
+    });
+  });
+
+  const brandLabel = brand || '전체 브랜드';
+  const targetLabel = {buy:'구매원가', sell:'판매가', both:'구매원가+판매가'}[target];
+  const methodLabel = method==='pct' ? `${val > 0 ? '+' : ''}${val}%` : `${val > 0 ? '+' : ''}${val.toLocaleString()}원`;
+  document.getElementById('price-preview').innerHTML =
+    `<div style="background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;padding:12px;font-size:13px">
+      ✅ <strong>${brandLabel}</strong>의 <strong>${targetLabel}</strong>를 <strong>${methodLabel}</strong> 조정 완료!
+      총 <strong>${totalCnt}개</strong> 제품 반영되었습니다.
+    </div>`;
+  setTimeout(()=>{ document.getElementById('price-preview').innerHTML=''; }, 4000);
 }
 
 document.getElementById('round-select').addEventListener('change', updateStats);
