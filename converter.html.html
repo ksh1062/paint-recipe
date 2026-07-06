@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>배합변환기 — 공업사스토어</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Malgun Gothic', sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .header {
+    background: #1a2b4c;
+    color: white;
+    padding: 18px 24px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header h1 { font-size: 20px; }
+  .header span { font-size: 13px; color: #aab; margin-left: auto; }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .card h2 {
+    font-size: 15px;
+    color: #1a2b4c;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ed8936;
+  }
+  .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+  label { font-size: 13px; color: #555; min-width: 80px; }
+  select, input {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border 0.2s;
+  }
+  select:focus, input:focus { border-color: #1a2b4c; }
+  select { background: white; cursor: pointer; }
+  .ingredient-row {
+    display: grid;
+    grid-template-columns: 160px 110px 120px 36px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .ingredient-row input { width: 100%; }
+  .preview-tag {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #e0fdf4;
+    color: #15803d;
+    border: 1px solid #86efac;
+    text-align: center;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .preview-tag.not-found {
+    background: #fff0f0;
+    color: #c00;
+    border-color: #fca5a5;
+  }
+  .preview-tag.empty {
+    background: #f5f5f5;
+    color: #bbb;
+    border-color: #e0e0e0;
+    font-weight: normal;
+  }
+  .btn-add {
+    background: #f0f4ff;
+    border: 1px dashed #1a2b4c;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    font-size: 14px;
+    color: #1a2b4c;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  .btn-add:hover { background: #e0e8ff; }
+  .btn-del {
+    background: #fee;
+    border: 1px solid #fcc;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    color: #c00;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-del:hover { background: #fcc; }
+  .btn-convert {
+    background: #1a2b4c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 6px;
+    transition: background 0.2s;
+  }
+  .btn-convert:hover { background: #2a3b6c; }
+  .btn-convert:disabled { background: #aaa; cursor: not-allowed; }
+  .confirm-box {
+    background: #fff8e1;
+    border: 2px solid #f59e0b;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 16px;
+    display: none;
+  }
+  .confirm-box h3 { color: #92400e; margin-bottom: 12px; font-size: 14px; }
+  .confirm-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 14px; }
+  .confirm-table th {
+    background: #1a2b4c;
+    color: white;
+    padding: 8px;
+    text-align: center;
+  }
+  .confirm-table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+  }
+  .confirm-table tr:nth-child(even) td { background: #f9f9f9; }
+  .confirm-table .total-row td {
+    background: #1a2b4c !important;
+    color: white;
+    font-weight: bold;
+  }
+  .warn-row td { color: #c00; background: #fff0f0 !important; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-ok {
+    background: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    flex: 1;
+  }
+  .btn-ok:hover { background: #15803d; }
+  .btn-cancel {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    flex: 1;
+  }
+  .btn-cancel:hover { background: #dc2626; }
+  .result-box {
+    background: #f0fdf4;
+    border: 2px solid #16a34a;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 16px;
+    display: none;
+  }
+  .result-box h3 { color: #15803d; margin-bottom: 12px; }
+  .result-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .result-table th {
+    background: #15803d;
+    color: white;
+    padding: 9px;
+    text-align: center;
+  }
+  .result-table td {
+    padding: 9px;
+    border-bottom: 1px solid #d1fae5;
+    text-align: center;
+  }
+  .result-table tr:nth-child(even) td { background: #f0fdf4; }
+  .result-table .total-row td {
+    background: #15803d !important;
+    color: white;
+    font-weight: bold;
+  }
+  .amount-highlight { font-size: 16px; font-weight: bold; color: #15803d; }
+  .tag { 
+    display: inline-block;
+    background: #e0e8ff;
+    color: #1a2b4c;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .no-match { color: #ef4444; font-size: 12px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+  .info-text { font-size: 12px; color: #888; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>🎨</div>
+  <div>
+    <h1>배합변환기</h1>
+  </div>
+  <span>공업사스토어 인천지점</span>
+</div>
+
+<!-- 변환 설정 -->
+<div class="card">
+  <h2>변환 설정</h2>
+  <div class="grid2">
+    <div>
+      <div class="row">
+        <label>원본 시스템</label>
+        <select id="fromSystem" onchange="updatePlaceholders()">
+          <option value="바슬락">바슬락 (Basslack)</option>
+          <option value="글라슈리트">글라슈리트 (Glasurit)</option>
+          <option value="RM">RM</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <div class="row">
+        <label>변환 시스템</label>
+        <select id="toSystem" onchange="updatePlaceholders()">
+          <option value="글라슈리트">글라슈리트 (Glasurit)</option>
+          <option value="바슬락">바슬락 (Basslack)</option>
+          <option value="RM">RM</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:4px">
+    <label>목표 용량</label>
+    <input type="number" id="targetAmount" value="400" min="1" max="9999" style="width:100px"> g
+  </div>
+  <p class="info-text">※ 원본 입력값의 합계를 기준으로 목표 용량에 맞게 자동 환산됩니다</p>
+</div>
+
+<!-- 원색제 입력 -->
+<div class="card">
+  <h2>원색제 입력 <span id="fromLabel" class="tag">바슬락</span></h2>
+  <div style="display:grid; grid-template-columns:1fr 80px 36px; gap:8px; margin-bottom:6px;">
+    <div style="font-size:12px;color:#888;padding:0 4px;">색종 코드</div>
+    <div style="font-size:12px;color:#888;padding:0 4px;">배합량(g)</div>
+    <div style="font-size:12px;color:#888;padding:0 4px;">변환 코드</div>
+    <div></div>
+  </div>
+  <div id="ingredients"></div>
+  <button class="btn-add" onclick="addRow()">+ 원색제 추가</button>
+</div>
+
+<!-- 변환 버튼 -->
+<button class="btn-convert" onclick="doConvert()">변환 결과 미리보기</button>
+
+<!-- 확인 박스 -->
+<div class="confirm-box" id="confirmBox">
+  <h3>⚠️ 변환 결과를 확인하세요. 확인 후 최종 적용하세요.</h3>
+  <table class="confirm-table" id="confirmTable"></table>
+  <div class="btn-row">
+    <button class="btn-cancel" onclick="cancelConvert()">취소</button>
+    <button class="btn-ok" onclick="applyConvert()">✅ 확인 완료 — 적용</button>
+  </div>
+</div>
+
+<!-- 최종 결과 -->
+<div class="result-box" id="resultBox">
+  <h3>✅ 변환 완료</h3>
+  <table class="result-table" id="resultTable"></table>
+  <p class="info-text" style="margin-top:10px">※ 도장 정보(에어압력, 도장횟수 등)는 원본 레시피를 따르세요</p>
+  <button class="btn-convert" style="margin-top:12px; background:#6b7280" onclick="resetAll()">새로 입력하기</button>
+</div>
+
+<script>
+// ===== 매핑 데이터 =====
+const MAPPING = {
+  "바슬락_to_글라": {"W05":"M1","W211":"M99/00","W210":"M99/01","W212":"M99/02","W213":"M99/03","W214":"M99/04","W220":"M99/24","W221":"M99/23","W1930":"A997","W1910":"A924","W1920":"A926","W1921":"A927","W1990":"A930","W1411":"A427","W1510":"A589","W1530":"A563","W1542":"A533","W1540":"A527","W1541":"A528","W352":"M506","W351":"M505","W1520":"A503","W1610":"A640","W1621":"A695","W1147":"A115","W1140":"A148","W1130":"A155","W1150":"A177","W1141":"A149","W311":"M176","W1160":"A143","W1120":"A105","W1110":"A136","W1220":"A201","W1320":"A306","W1321":"A307","W1310":"A329","W1340":"A323","W1371":"A350","W1360":"A378","W1350":"A347","W1430":"A359","W1420":"A430","W382":"M364","W343":"M363","W331":"M319","W1020":"A097","W1010":"A031","W1011":"A035","W1019":"A032","W301":"M011","W391":"M919","W302":"M010","W590":"90-1250","W1390":"90-3A0","W599":"90-905","W400":"E014","W408":"E025","W446":"E440","W443":"E460","W448":"E480","W441":"E435","W469":"E660","W455":"E520","W466":"E650","W463":"E630","W460":"E620","W436":"E680","W410":"E120","W490":"E910","W420":"E280","W488":"E850","W485":"E830","W425":"E220","W435":"E330","W544":"LE555","W10":"M5","W00":"M4","R45":"E3","W1012":"M034K"},
+  "글라_to_바슬락": {"M1":"W05","M99/00":"W211","M99/01":"W210","M99/02":"W212","M99/03":"W213","M99/04":"W214","M99/24":"W220","M99/23":"W221","A997":"W1930","A924":"W1910","A926":"W1920","A927":"W1921","A930":"W1990","A427":"W1411","A589":"W1510","A563":"W1530","A533":"W1542","A527":"W1540","A528":"W1541","M506":"W352","M505":"W351","A503":"W1520","A640":"W1610","A695":"W1621","A115":"W1147","A148":"W1140","A155":"W1130","A177":"W1150","A149":"W1141","M176":"W311","A143":"W1160","A105":"W1120","A136":"W1110","A201":"W1220","A306":"W1320","A307":"W1321","A329":"W1310","A323":"W1340","A350":"W1371","A378":"W1360","A347":"W1350","A359":"W1430","A430":"W1420","M364":"W382","M363":"W343","M319":"W331","A097":"W1020","A031":"W1010","A035":"W1011","A032":"W1019","M011":"W301","M919":"W391","M010":"W302","90-1250":"W590","90-3A0":"W1390","90-905":"W599","E014":"W400","E025":"W408","E440":"W446","E460":"W443","E480":"W448","E435":"W441","E660":"W469","E520":"W455","E650":"W466","E630":"W463","E620":"W460","E680":"W436","E120":"W410","E910":"W490","E280":"W420","E850":"W488","E830":"W485","E220":"W425","E330":"W435","LE555":"W544","M5":"W10","M4":"W00","E3":"R45","M034K":"W1012"},
+  "RM_to_글라": {"HB090":"M1","HB110":"M99/00","HB120":"M99/01","HB130":"M99/02","HB140":"M99/03","HB150":"M99/04","HB176":"M99/24","HB186":"M99/23","HB200":"A997","HB203":"A924","HB250":"A926","HB259":"A927","HB260":"A930","HB300":"A427","HB444":"A589","HB460":"A563","HB454":"A533","HB464":"A527","HB469":"A528","HB46K":"M506","HB46L":"M505","HB471":"A503","HB540":"A640","HB564":"A695","HB600":"A115","HB610":"A148","HB615":"A155","HB617":"A177","HB619":"A149","HB64L":"M176","HB650":"A143","HB670":"A105","HB680":"A136","HB730":"A372","HB740":"A201","HB770":"A306","HB779":"A307","HB780":"A329","HB821":"A323","HB832":"A350","HB850":"A378","HB860":"A349","HB861":"A347","HB870":"A359","HB880":"A430","HB88L":"M364","HB88M":"M363","HB88N":"M319","HB961":"A097","HB990":"A031","HB994":"A035","HB999":"A032","HB99K":"M011","HB99L":"M919","HB99M":"M010","D403":"90-1250","HB80T":"90-3A0","HB10S":"90-905","CB10K":"E014","CB12L":"E025","CB34M":"E440","CB35L":"E460","CB38K":"E480","CB38L":"E435","CB45L":"E660","CB47M":"E520","CB54L":"E650","CB56L":"E630","CB57M":"E620","CB58M":"E680","CB62L":"E120","CB63L":"E910","CB71V":"E280","CB73L":"E850","CB74L":"E830","CB75K":"E220","CB85L":"E330","HB100":"M5","HB002":"M4","HB032":"E3","HB993W":"M034K"},
+  "RM_to_바슬락": {"HB090":"W05","HB110":"W211","HB120":"W210","HB130":"W212","HB140":"W213","HB150":"W214","HB176":"W220","HB186":"W221","HB200":"W1930","HB203":"W1910","HB250":"W1920","HB259":"W1921","HB260":"W1990","HB300":"W1411","HB444":"W1510","HB460":"W1530","HB454":"W1542","HB464":"W1540","HB469":"W1541","HB46K":"W352","HB46L":"W351","HB471":"W1520","HB540":"W1610","HB564":"W1621","HB600":"W1147","HB610":"W1140","HB615":"W1130","HB617":"W1150","HB619":"W1141","HB64L":"W311","HB650":"W1160","HB670":"W1120","HB680":"W1110","HB740":"W1220","HB770":"W1320","HB779":"W1321","HB780":"W1310","HB821":"W1340","HB832":"W1371","HB850":"W1360","HB861":"W1350","HB870":"W1430","HB880":"W1420","HB88L":"W382","HB88M":"W343","HB88N":"W331","HB961":"W1020","HB990":"W1010","HB994":"W1011","HB999":"W1019","HB99K":"W301","HB99L":"W391","HB99M":"W302","D403":"W590","HB80T":"W1390","HB10S":"W599","CB10K":"W400","CB12L":"W408","CB34M":"W446","CB35L":"W443","CB38K":"W448","CB38L":"W441","CB45L":"W469","CB47M":"W455","CB54L":"W466","CB56L":"W463","CB57M":"W460","CB58M":"W436","CB62L":"W410","CB63L":"W490","CB71V":"W420","CB73L":"W488","CB74L":"W485","CB75K":"W425","CB85L":"W435","HB100":"W10","HB002":"W00","HB032":"R45","HB993W":"W1012"}
+};
+
+function getMapKey(from, to) {
+  if (from === '바슬락' && to === '글라슈리트') return '바슬락_to_글라';
+  if (from === '글라슈리트' && to === '바슬락') return '글라_to_바슬락';
+  if (from === 'RM' && to === '글라슈리트') return 'RM_to_글라';
+  if (from === 'RM' && to === '바슬락') return 'RM_to_바슬락';
+  // 글라→RM, 바슬락→RM은 역방향으로 처리
+  return null;
+}
+
+function convertCode(code, from, to) {
+  const key = getMapKey(from, to);
+  const norm = code.replace(/\s+/g, '').toUpperCase();
+  if (key && MAPPING[key]) {
+    // 대소문자 무시 검색
+    for (const [k, v] of Object.entries(MAPPING[key])) {
+      if (k.replace(/\s+/g,'').toUpperCase() === norm) return v;
+    }
+  }
+  return null;
+}
+
+// ===== UI =====
+let rowCount = 0;
+
+function addRow(code='', amount='', focusCode=false) {
+  rowCount++;
+  const id = rowCount;
+  const div = document.createElement('div');
+  div.className = 'ingredient-row';
+  div.id = `row_${id}`;
+  div.innerHTML = `
+    <input type="text" placeholder="예: W00" value="${code}" style="text-transform:uppercase" id="code_${id}">
+    <input type="number" placeholder="g" value="${amount}" min="0" step="0.001" id="amt_${id}">
+    <div class="preview-tag empty" id="prev_${id}">—</div>
+    <button class="btn-del" onclick="delRow('row_${id}')">×</button>
+  `;
+  document.getElementById('ingredients').appendChild(div);
+
+  // 배합량 칸에서 Tab 누르면 → 다음 행 코드 칸으로 이동 (없으면 새 행 추가)
+  const amtInput = div.querySelector(`#amt_${id}`);
+  amtInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      // 다음 행이 있으면 그쪽 코드 칸으로, 없으면 새 행 추가
+      const allRows = document.querySelectorAll('#ingredients .ingredient-row');
+      const idx = Array.from(allRows).indexOf(div);
+      if (idx < allRows.length - 1) {
+        allRows[idx + 1].querySelector('input[type="text"]').focus();
+      } else {
+        addRow('', '', true);
+      }
+    }
+  });
+
+  // 코드 칸에서 Tab 누르면 → 같은 행 배합량 칸으로 (기본 동작)
+  // 단 Enter 누르면 배합량 칸으로 이동
+  const codeInput = div.querySelector(`#code_${id}`);
+  codeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      amtInput.focus();
+      amtInput.select();
+    }
+  });
+  // 실시간 미리보기
+  codeInput.addEventListener('input', function() {
+    updatePreview(id);
+  });
+  codeInput.addEventListener('change', function() {
+    updatePreview(id);
+  });
+
+  if (focusCode) {
+    setTimeout(() => codeInput.focus(), 10);
+  }
+}
+
+function delRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function updatePlaceholders() {
+  const from = document.getElementById('fromSystem').value;
+  document.getElementById('fromLabel').textContent = from;
+}
+
+function doConvert() {
+  const from = document.getElementById('fromSystem').value;
+  const to = document.getElementById('toSystem').value;
+  const target = parseFloat(document.getElementById('targetAmount').value);
+
+  if (from === to) { alert('원본과 변환 시스템이 같습니다. 다른 시스템을 선택해주세요.'); return; }
+  if (!target || target <= 0) { alert('목표 용량을 입력해주세요.'); return; }
+
+  const rows = document.querySelectorAll('#ingredients .ingredient-row');
+  let items = [];
+  let totalOrig = 0;
+
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const code = inputs[0].value.replace(/\s+/g,'').toUpperCase();
+    const amount = parseFloat(inputs[1].value);
+    if (code && !isNaN(amount) && amount > 0) {
+      items.push({ code, amount });
+      totalOrig += amount;
+    }
+  });
+
+  if (items.length === 0) { alert('원색제를 입력해주세요.'); return; }
+
+  // 변환 계산
+  let results = items.map(item => {
+    const converted = convertCode(item.code, from, to);
+    const ratio = item.amount / totalOrig;
+    const convertedAmount = Math.round(ratio * target * 1000) / 1000;
+    return {
+      origCode: item.code,
+      origAmount: item.amount,
+      toCode: converted,
+      toAmount: convertedAmount,
+      notFound: !converted
+    };
+  });
+
+  const totalConverted = results.reduce((s, r) => s + r.toAmount, 0);
+  const hasWarning = results.some(r => r.notFound);
+
+  // 확인 테이블 렌더
+  let html = `<tr><th>${from} 코드</th><th>원본(g)</th><th>${to} 코드</th><th>환산(${target}g)</th></tr>`;
+  results.forEach(r => {
+    const cls = r.notFound ? 'warn-row' : '';
+    const toCode = r.notFound ? '❌ 매핑없음' : r.toCode;
+    html += `<tr class="${cls}"><td>${r.origCode}</td><td>${r.origAmount}</td><td><b>${toCode}</b></td><td>${r.toAmount.toFixed(3)}</td></tr>`;
+  });
+  html += `<tr class="total-row"><td colspan="2">TOTAL (원본: ${totalOrig.toFixed(3)}g)</td><td colspan="2">${totalConverted.toFixed(3)}g</td></tr>`;
+
+  document.getElementById('confirmTable').innerHTML = html;
+  document.getElementById('confirmBox').style.display = 'block';
+  document.getElementById('resultBox').style.display = 'none';
+
+  if (hasWarning) {
+    document.getElementById('confirmBox').style.borderColor = '#ef4444';
+    document.getElementById('confirmBox').querySelector('h3').textContent = '⚠️ 일부 코드가 매핑되지 않았습니다! 확인 후 진행하세요.';
+    document.getElementById('confirmBox').querySelector('h3').style.color = '#b91c1c';
+  } else {
+    document.getElementById('confirmBox').style.borderColor = '#f59e0b';
+    document.getElementById('confirmBox').querySelector('h3').textContent = '⚠️ 변환 결과를 확인하세요. 확인 후 최종 적용하세요.';
+    document.getElementById('confirmBox').querySelector('h3').style.color = '#92400e';
+  }
+
+  // 스크롤
+  document.getElementById('confirmBox').scrollIntoView({ behavior: 'smooth' });
+
+  // 결과 저장
+  window._pendingResults = { results, target, from, to, totalConverted };
+}
+
+function cancelConvert() {
+  document.getElementById('confirmBox').style.display = 'none';
+  window._pendingResults = null;
+}
+
+function applyConvert() {
+  const { results, target, from, to, totalConverted } = window._pendingResults;
+  document.getElementById('confirmBox').style.display = 'none';
+
+  let html = `<tr><th>${to} 코드</th><th>배합량</th><th>비율</th></tr>`;
+  results.forEach(r => {
+    const ratio = ((r.toAmount / totalConverted) * 100).toFixed(1);
+    const toCode = r.notFound ? `❌ ${r.origCode} 매핑없음` : r.toCode;
+    html += `<tr><td><b>${toCode}</b></td><td class="amount-highlight">${r.toAmount.toFixed(3)}g</td><td>${ratio}%</td></tr>`;
+  });
+  html += `<tr class="total-row"><td>TOTAL</td><td>${totalConverted.toFixed(3)}g</td><td>100%</td></tr>`;
+
+  document.getElementById('resultTable').innerHTML = html;
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('resultBox').scrollIntoView({ behavior: 'smooth' });
+}
+
+
+function updatePreview(id) {
+  const from = document.getElementById('fromSystem').value;
+  const to = document.getElementById('toSystem').value;
+  const codeEl = document.getElementById(`code_${id}`);
+  const prevEl = document.getElementById(`prev_${id}`);
+  if (!codeEl || !prevEl) return;
+
+  const code = codeEl.value.replace(/\s+/g,'').toUpperCase();
+  if (!code) {
+    prevEl.textContent = '—';
+    prevEl.className = 'preview-tag empty';
+    return;
+  }
+  if (from === to) {
+    prevEl.textContent = '=같음';
+    prevEl.className = 'preview-tag empty';
+    return;
+  }
+  const converted = convertCode(code, from, to);
+  if (converted) {
+    prevEl.textContent = converted;
+    prevEl.className = 'preview-tag';
+  } else {
+    prevEl.textContent = '매핑없음';
+    prevEl.className = 'preview-tag not-found';
+  }
+}
+
+function refreshAllPreviews() {
+  const rows = document.querySelectorAll('#ingredients .ingredient-row');
+  rows.forEach(row => {
+    const id = row.id.replace('row_', '');
+    updatePreview(id);
+  });
+}
+
+// 시스템 변경 시 전체 미리보기 갱신
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('fromSystem').addEventListener('change', refreshAllPreviews);
+  document.getElementById('toSystem').addEventListener('change', refreshAllPreviews);
+});
+
+function resetAll() {
+  document.getElementById('ingredients').innerHTML = '';
+  document.getElementById('confirmBox').style.display = 'none';
+  document.getElementById('resultBox').style.display = 'none';
+  rowCount = 0;
+  addRow();
+  addRow();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 초기 2줄 추가
+addRow();
+addRow();
+</script>
+</body>
+</html>
